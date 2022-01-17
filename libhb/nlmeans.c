@@ -1149,6 +1149,7 @@ static void nlmeans_filter_thread(void *thread_args_v)
                           pv->diff_max[c]);
         }
         buf->s = pv->frame[segment].s;
+        //hb_buffer_copy_props(buf, &pv->frame[segment]);
         thread_data->out = buf;
 
         // Finished this segment, notify.
