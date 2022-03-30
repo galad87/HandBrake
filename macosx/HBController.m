@@ -144,7 +144,7 @@ static void *HBControllerLogLevelContext = &HBControllerLogLevelContext;
     self = [super initWithWindowNibName:@"MainWindow"];
     if (self)
     {
-        // Init libhb
+        // Init HBCore
         NSInteger loggingLevel = [NSUserDefaults.standardUserDefaults integerForKey:HBLoggingLevel];
         _core = [[HBCore alloc] initWithLogLevel:loggingLevel name:@"ScanCore"];
 
