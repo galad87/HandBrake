@@ -16,15 +16,17 @@ jobs:
         path: ~/mac-toolchain
         key: mac-toolchain
 
+    - name: Setup Path
+      run: |
+        echo ~/mac-toolchain/bin >> $GITHUB_PATH
+
     - name: Setup Environment
       if: steps.mac-toolchain.outputs.cache-hit != 'true'
       run: |
         scripts/mac-toolchain-build ~/mac-toolchain
-        echo ~/mac-toolchain/bin >> $GITHUB_PATH
 
     - name: Build HandBrake
       run: |
-        git submodule update --init --recursive
         ./configure
         cd build
         make ub && make pkg.create
