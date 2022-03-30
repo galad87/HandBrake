@@ -13,13 +13,14 @@ jobs:
       id: mac-toolchain
       uses: actions/cache@v2
       with:
-        path: /usr/local
+        path: /usr/local/mac-toolchain/
         key: mac-toolchain
 
     - name: Setup Environment
       if: steps.mac-toolchain.outputs.cache-hit != 'true'
       run: |
-        scripts/mac-toolchain-build /usr/local
+        scripts/mac-toolchain-build /usr/local/mac-toolchain/
+        echo /usr/local/mac-toolchain/bin >> $GITHUB_PATH
 
     - name: Build HandBrake
       run: |
