@@ -5,22 +5,22 @@ on: [push, pull_request, workflow_dispatch]
 jobs:
   build:
     name: Build on macOS
-    runs-on: macos-11.0
+    runs-on: macos-latest
     steps:
     - uses: actions/checkout@v3
 
     - name: Toolchain Cache
       id: mac-toolchain
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
-        path: /usr/local/mac-toolchain/
+        path: ~/mac-toolchain
         key: mac-toolchain
 
     - name: Setup Environment
       if: steps.mac-toolchain.outputs.cache-hit != 'true'
       run: |
-        scripts/mac-toolchain-build /usr/local/mac-toolchain/
-        echo /usr/local/mac-toolchain/bin >> $GITHUB_PATH
+        scripts/mac-toolchain-build ~/mac-toolchain
+        echo ~/mac-toolchain/bin >> $GITHUB_PATH
 
     - name: Build HandBrake
       run: |
