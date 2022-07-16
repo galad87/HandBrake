@@ -2277,7 +2277,12 @@ int hb_mixdown_has_remix_support(int mixdown, uint64_t layout)
 
         // more than 1 channel
         case HB_AMIXDOWN_STEREO:
-            return (av_get_channel_layout_nb_channels(layout) > 1);
+        {
+            AVChannelLayout ch_layout = {0};
+            av_channel_layout_from_mask(&ch_layout, layout);
+
+            return (ch_layout.nb_channels > 1);
+        }
 
         // regular stereo (not Dolby)
         case HB_AMIXDOWN_LEFT:
@@ -2477,14 +2482,18 @@ const hb_mixdown_t* hb_mixdown_get_next(const hb_mixdown_t *last)
     return ((hb_mixdown_internal_t*)last)->next;
 }
 
-void hb_layout_get_name(char * name, int size, int64_t layout)
+void hb_layout_get_name(char *name, int size, int64_t layout)
 {
-    av_get_channel_layout_string(name, size, 0, layout);
+    AVChannelLayout ch_layout = {0};
+    av_channel_layout_from_mask(&ch_layout, layout);
+    av_channel_layout_describe(&ch_layout, name, size);
 }
 
 int hb_layout_get_discrete_channel_count(int64_t layout)
 {
-    return av_get_channel_layout_nb_channels(layout);
+    AVChannelLayout ch_layout = {0};
+    av_channel_layout_from_mask(&ch_layout, layout);
+    return ch_layout.nb_channels;
 }
 
 int hb_layout_get_low_freq_channel_count(int64_t layout)

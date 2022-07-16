@@ -52,8 +52,11 @@ hb_audio_resample_t* hb_audio_resample_init(enum AVSampleFormat sample_fmt,
         resample->dual_mono_downmix = 0;
     }
 
+    AVChannelLayout ch_layout = {0};
+    av_channel_layout_from_mask(&ch_layout, channel_layout);
+
     // requested output channel_layout, sample_fmt
-    resample->out.channels = av_get_channel_layout_nb_channels(channel_layout);
+    resample->out.channels            = ch_layout.nb_channels;
     resample->out.channel_layout      = channel_layout;
     resample->out.matrix_encoding     = matrix_encoding;
     resample->out.sample_fmt          = sample_fmt;
@@ -229,11 +232,13 @@ int hb_audio_resample_update(hb_audio_resample_t *resample)
             return ret;
         }
 
+        AVChannelLayout ch_layout = {0};
+        av_channel_layout_from_mask(&ch_layout, resample->in.channel_layout);
+
         resample->resample.sample_fmt         = resample->in.sample_fmt;
         resample->resample.sample_rate        = resample->in.sample_rate;
         resample->resample.channel_layout     = resample->in.channel_layout;
-        resample->resample.channels           =
-            av_get_channel_layout_nb_channels(resample->in.channel_layout);
+        resample->resample.channels           = ch_layout.nb_channels;
         resample->resample.lfe_mix_level      = resample->in.lfe_mix_level;
         resample->resample.center_mix_level   = resample->in.center_mix_level;
         resample->resample.surround_mix_level = resample->in.surround_mix_level;
