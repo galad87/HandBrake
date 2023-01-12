@@ -1,0 +1,228 @@
+From ba2227bb8619724c2bfadcc4d8f25d741a3398ac Mon Sep 17 00:00:00 2001
+From: Vasyl Gello <vasek.gello@gmail.com>
+Date: Fri, 14 Oct 2022 15:56:39 +0000
+Subject: [PATCH] Add missing stream callback functionality
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+After the split of libdvdcss from libdvdread,
+the stream callback code was moved to libdvdcss.
+
+This went largely unnoticed because most consumers
+played their DVD‌ ISO images on the systems with libdvdcss
+installed.
+
+However, I tested Kodi by playing unencrypted DVD‌ ISO
+and noticed the inability to play it.
+
+This code is inspired by stream_* functions in libdvdcss.
+
+Signed-off-by: Vasyl Gello <vasek.gello@gmail.com>
+---
+ src/dvd_input.c | 100 +++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 82 insertions(+), 18 deletions(-)
+
+diff --git a/src/dvd_input.c b/src/dvd_input.c
+index d7dad87..26b6928 100644
+--- a/src/dvd_input.c
++++ b/src/dvd_input.c
+@@ -93,16 +93,21 @@ static int open_win32(const char *path, int flags)
+ }
+ #endif
+ 
+-/* The DVDinput handle, add stuff here for new input methods. */
++/* The DVDinput handle, add stuff here for new input methods.
++ * NOTE: All members of this structure must be initialized in dvd_input_New
++ */
+ struct dvd_input_s {
+   /* libdvdcss handle */
+   dvdcss_t dvdcss;
+   /* */
+   void *priv;
+   dvd_logger_cb *logcb;
++  off_t ipos;
+ 
+   /* dummy file input */
+   int fd;
++  /* stream input */
++  dvd_reader_stream_cb *stream_cb;
+ };
+ 
+ static dvd_input_t dvd_input_New(void *priv, dvd_logger_cb *logcb)
+@@ -112,6 +117,12 @@ static dvd_input_t dvd_input_New(void *priv, dvd_logger_cb *logcb)
+   {
+       dev->priv = priv;
+       dev->logcb = logcb;
++      dev->ipos = 0;
++
++      /* Initialize all inputs to safe defaults */
++      dev->dvdcss = NULL;
++      dev->fd = -1;
++      dev->stream_cb = NULL;
+   }
+   return dev;
+ }
+@@ -199,12 +210,10 @@ static int css_close(dvd_input_t dev)
+  */
+ static dvd_input_t file_open(void *priv, dvd_logger_cb *logcb,
+                              const char *target,
+-                             dvd_reader_stream_cb *stream_cb UNUSED)
++                             dvd_reader_stream_cb *stream_cb)
+ {
+   dvd_input_t dev;
+ 
+-  if(target == NULL)
+-    return NULL;
+   /* Allocate the library structure */
+   dev = dvd_input_New(priv, logcb);
+   if(dev == NULL) {
+@@ -213,7 +222,23 @@ static dvd_input_t file_open(void *priv, dvd_logger_cb *logcb,
+     return NULL;
+   }
+ 
++  /* Initialize with stream callback if it is specified */
++  if (stream_cb) {
++    if (!stream_cb->pf_read || !stream_cb->pf_seek) {
++      DVDReadLog(priv, logcb, DVD_LOGGER_LEVEL_ERROR,
++                 "Stream callback provided but lacks of pf_read or pf_seek methods.");
++      free(dev);
++      return NULL;
++    }
++    dev->stream_cb = stream_cb;
++    return dev;
++  }
++
+   /* Open the device */
++  if(target == NULL) {
++    free(dev);
++    return NULL;
++  }
+ #if defined(_WIN32)
+   dev->fd = open_win32(target, O_RDONLY | O_BINARY);
+ #elif defined(__OS2__)
+@@ -254,14 +279,38 @@ static dvd_input_t file_open(void *priv, dvd_logger_cb *logcb,
+  */
+ static int file_seek(dvd_input_t dev, int blocks)
+ {
+-  off_t pos;
++  off_t pos = -1;
++
++  if(dev->ipos == blocks)
++  {
++    /* We are already in position */
++    return blocks;
++  }
++
++  if (dev->stream_cb) {
++    /* Returns 0 on successful completion and -1 on error */
++    pos = dev->stream_cb->pf_seek(dev->priv, (off_t)blocks * (off_t)DVD_VIDEO_LB_LEN);
++
++    if (!pos) {
++      dev->ipos = blocks;
++    }
++  } else {
++    /* Returns position as the number of bytes from beginning of file
++     * or -1 on error
++     */
++    pos = lseek(dev->fd, (off_t)blocks * (off_t)DVD_VIDEO_LB_LEN, SEEK_SET);
++
++    if (pos >= 0) {
++      dev->ipos = pos / DVD_VIDEO_LB_LEN;
++    }
++  }
+ 
+-  pos = lseek(dev->fd, (off_t)blocks * (off_t)DVD_VIDEO_LB_LEN, SEEK_SET);
+   if(pos < 0) {
+     return pos;
+   }
++
+   /* assert pos % DVD_VIDEO_LB_LEN == 0 */
+-  return (int) (pos / DVD_VIDEO_LB_LEN);
++  return (int) dev->ipos;
+ }
+ 
+ /**
+@@ -278,36 +327,48 @@ static int file_title(dvd_input_t dev UNUSED, int block UNUSED)
+ static int file_read(dvd_input_t dev, void *buffer, int blocks,
+ 		     int flags UNUSED)
+ {
+-  size_t len, bytes;
++  size_t len, bytes, blocks_read;
+ 
+   len = (size_t)blocks * DVD_VIDEO_LB_LEN;
+   bytes = 0;
++  blocks_read = 0;
+ 
+   while(len > 0) {
+-    ssize_t ret = read(dev->fd, ((char*)buffer) + bytes, len);
++    ssize_t ret = -1;
++
++    /* Perform read based on the input type */
++    if (dev->stream_cb) {
++      /* Returns the number of bytes read or -1 on error */
++      ret = dev->stream_cb->pf_read(dev->priv, ((char*)buffer) + bytes, len);
++    } else {
++      /* Returns the number of bytes read or -1 on error */
++      ret = read(dev->fd, ((char*)buffer) + bytes, len);
++    }
+ 
+     if(ret < 0) {
+       /* One of the reads failed, too bad.  We won't even bother
+        * returning the reads that went OK, and as in the POSIX spec
+        * the file position is left unspecified after a failure. */
++      dev->ipos = -1;
+       return ret;
+     }
+ 
+     if(ret == 0) {
+       /* Nothing more to read.  Return all of the whole blocks, if any.
+        * Adjust the file position back to the previous block boundary. */
+-      off_t over_read = -(bytes % DVD_VIDEO_LB_LEN);
+-      off_t pos = lseek(dev->fd, over_read, SEEK_CUR);
+-      if(pos % 2048 != 0)
+-          DVDReadLog(dev->priv, dev->logcb, DVD_LOGGER_LEVEL_WARN,
+-                     "lseek not multiple of 2048! Something is wrong!");
+-      return (int) (bytes / DVD_VIDEO_LB_LEN);
++      ret = file_seek(dev, dev->ipos + blocks_read);
++      if(ret < 0)
++        return ret;
++
++      return (int) blocks_read;
+     }
+ 
+     len -= ret;
+     bytes += ret;
++    blocks_read = bytes / DVD_VIDEO_LB_LEN;
+   }
+ 
++  dev->ipos += blocks_read;
+   return blocks;
+ }
+ 
+@@ -316,16 +377,19 @@ static int file_read(dvd_input_t dev, void *buffer, int blocks,
+  */
+ static int file_close(dvd_input_t dev)
+ {
+-  int ret;
++  int ret = 0;
+ 
+-  ret = close(dev->fd);
++  /* close file if it was open */
++
++  if (dev->fd >= 0) {
++    ret = close(dev->fd);
++  }
+ 
+   free(dev);
+ 
+   return ret;
+ }
+ 
+-
+ /**
+  * Setup read functions with either libdvdcss or minimal DVD access.
+  */
+-- 
+GitLab
+
