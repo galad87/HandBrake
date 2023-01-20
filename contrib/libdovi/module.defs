@@ -1,0 +1,23 @@
+$(eval $(call import.MODULE.defs,LIBDOVI,libdovi))
+$(eval $(call import.CONTRIB.defs,LIBDOVI))
+
+LIBDOVI.FETCH.url      = https://github.com/quietvoid/dovi_tool/archive/refs/tags/libdovi-3.0.0.tar.gz
+LIBDOVI.FETCH.sha256   = a5162ff9b9189a69bf5b92ab361582f2ab53e7591cb9f65d2869ee1002099bec
+LIBDOVI.FETCH.basename = dovi_tool-libdovi-3.0.0.tar.gz
+
+define LIBDOVI.CONFIGURE
+     $(CARGO.exe)  fetch --manifest-path=$(LIBDOVI.EXTRACT.dir/)dolby_vision/Cargo.toml
+     $(TOUCH.exe) $@
+ endef
+
+LIBDOVI.BUILD.make       = $(CARGO.exe) cbuild
+LIBDOVI.BUILD.extra      = --offline --release --library-type staticlib --prefix $(LIBDOVI.CONFIGURE.prefix)
+LIBDOVI.BUILD.args.dir   = --manifest-path=$(LIBDOVI.EXTRACT.dir/)dolby_vision/Cargo.toml
+
+LIBDOVI.INSTALL.make     = $(CARGO.exe) cinstall
+LIBDOVI.INSTALL.extra    = --offline --release --library-type staticlib --prefix $(LIBDOVI.CONFIGURE.prefix)
+LIBDOVI.INSTALL.args.dir = --manifest-path=$(LIBDOVI.EXTRACT.dir/)dolby_vision/Cargo.toml
+
+LIBDOVI.CLEAN.make       = $(CARGO.exe) clean
+LIBDOVI.CLEAN.args.dir   = --manifest-path=$(LIBDOVI.EXTRACT.dir/)dolby_vision/Cargo.toml
+LIBDOVI.CLEAN.ntargets   =

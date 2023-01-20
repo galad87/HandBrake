@@ -326,6 +326,8 @@
 		A9E1468216BC2AD800C307BC /* PlayTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = A9E1467E16BC2AD800C307BC /* PlayTemplate.pdf */; };
 		A9E1468316BC2AD800C307BC /* PrevTemplate.pdf in Resources */ = {isa = PBXBuildFile; fileRef = A9E1467F16BC2AD800C307BC /* PrevTemplate.pdf */; };
 		A9E165521C523016003EF30E /* libavfilter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9E165511C523016003EF30E /* libavfilter.a */; };
+		A9E34AD5297871FE00C5DD82 /* libdovi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9E34AD4297871FE00C5DD82 /* libdovi.a */; settings = {ATTRIBUTES = (Weak, ); }; };
+		A9E34AD6297871FE00C5DD82 /* libdovi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A9E34AD4297871FE00C5DD82 /* libdovi.a */; settings = {ATTRIBUTES = (Weak, ); }; };
 		A9E52CD8218DD52B00E17B86 /* ExceptionAlert.xib in Resources */ = {isa = PBXBuildFile; fileRef = A9E52CD6218DD52A00E17B86 /* ExceptionAlert.xib */; };
 		A9F217E61E2F934C00C10C6E /* container-migration.plist in Resources */ = {isa = PBXBuildFile; fileRef = A9F217E51E2F934C00C10C6E /* container-migration.plist */; };
 		A9F472891976B7F30009EC65 /* HBSubtitlesDefaultsController.m in Sources */ = {isa = PBXBuildFile; fileRef = A9F472871976B7F30009EC65 /* HBSubtitlesDefaultsController.m */; };
@@ -890,6 +892,7 @@
 		A9E165511C523016003EF30E /* libavfilter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavfilter.a; path = external/contrib/lib/libavfilter.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		A9E2FD241A21BC4A000E8D3F /* HBAddPresetController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HBAddPresetController.h; sourceTree = "<group>"; };
 		A9E2FD251A21BC4A000E8D3F /* HBAddPresetController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HBAddPresetController.m; sourceTree = "<group>"; };
+		A9E34AD4297871FE00C5DD82 /* libdovi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libdovi.a; path = external/contrib/lib/libdovi.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		A9E52CD7218DD52A00E17B86 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/ExceptionAlert.xib; sourceTree = "<group>"; };
 		A9E8F80423003B2F00AA14E9 /* HandBrakeXPCService1.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = HandBrakeXPCService1.plist; sourceTree = "<group>"; };
 		A9EA43661A2210C400785E95 /* HBTableView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HBTableView.h; sourceTree = "<group>"; };
@@ -1084,6 +1087,7 @@
 			files = (
 				A9C3A8F7278DFFA500839EDF /* Foundation.framework in Frameworks */,
 				A97D8DD124DBD3F800B16AF5 /* libiconv.tbd in Frameworks */,
+				A9E34AD5297871FE00C5DD82 /* libdovi.a in Frameworks */,
 				A97D8DD024DBD3EF00B16AF5 /* libbz2.tbd in Frameworks */,
 				A97D8DCF24DBD3C000B16AF5 /* libz.tbd in Frameworks */,
 				A9A25D9C21182741005A8A0F /* CoreMedia.framework in Frameworks */,
@@ -1202,6 +1206,7 @@
 				D0DC8F69233159C700C12A24 /* libdav1d.a in Frameworks */,
 				A91CE2BA1C7DABBC0068F46F /* libdvdnav.a in Frameworks */,
 				1CDCF0C4241F28D400FB62C6 /* libturbojpeg.a in Frameworks */,
+				A9E34AD6297871FE00C5DD82 /* libdovi.a in Frameworks */,
 				A91CE2BB1C7DABBC0068F46F /* libdvdread.a in Frameworks */,
 				1C6D76561CD7733400F5B943 /* libharfbuzz.a in Frameworks */,
 				A91CE2BD1C7DABBC0068F46F /* libfreetype.a in Frameworks */,
@@ -1237,6 +1242,7 @@
 		271BA4C714B1236D00BC1D2C /* Static Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				A9E34AD4297871FE00C5DD82 /* libdovi.a */,
 				1CDCF0C1241F28D400FB62C6 /* libturbojpeg.a */,
 				1C280BF320BD58DD00D5ECC2 /* libspeex.a */,
 				1CBC683320BE014800A26CC2 /* liblzma.a */,
@@ -2080,7 +2086,7 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = HB;
-				LastUpgradeCheck = 1400;
+				LastUpgradeCheck = 1420;
 				ORGANIZATIONNAME = HandBrake;
 				TargetAttributes = {
 					273F203814ADBC200021BE6D = {

@@ -126,6 +126,7 @@ if [ -n "$reconfigure" ]; then
     done
     PATH="${PATH}${APPLE_PATH}"
     export PATH="${PATH:1}"
+    export PATH="$HOME/.cargo/bin:$PATH"
     echo "Unclobbering PATH:"
     echo "    export PATH=\"${PATH}\""
 
