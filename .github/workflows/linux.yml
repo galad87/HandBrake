@@ -9,6 +9,14 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-python@v3
+    - uses: actions-rs/toolchain@v1
+      with:
+          profile: minimal
+          toolchain: stable
+
+    - name: Install cargo-c
+      run: |
+          cargo install cargo-c
 
     - name: Setup Environment
       run: |
@@ -21,6 +29,6 @@ jobs:
 
     - name: Build HandBrake Linux
       run: |
-        ./configure --disable-gtk-update-checks --enable-qsv --enable-vce --enable-nvenc --enable-nvdec
+        ./configure --disable-gtk-update-checks --enable-qsv --enable-vce --enable-nvenc --enable-nvdec --disable-x265 --enable-libdovi
         cd build
         make -j 3
