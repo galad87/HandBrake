@@ -52,7 +52,7 @@ jobs:
             return -1
         fi
 
-    - name: Setup Toolchain Toolchain
+    - name: Setup Cargo-C Toolchain
       if: steps.windows-cargo-c-toolchain.outputs.cache-hit != 'true'
       run: |
         cargo install cargo-c

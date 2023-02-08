@@ -32,8 +32,6 @@ jobs:
         sudo pip3 install meson
         sudo apt-get install gstreamer1.0-libav intltool libappindicator-dev libdbus-glib-1-dev libglib2.0-dev libgtk-3-dev libgudev-1.0-dev libnotify-dev
         sudo apt-get install libva-dev libdrm-dev llvm clang
-        curl https://sh.rustup.rs -sSf | sh -s -- -y
-        source "$HOME/.cargo/env"
 
     - name: Setup Toolchain
       run: |
