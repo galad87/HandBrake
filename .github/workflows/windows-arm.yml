@@ -9,12 +9,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Setup Environment
+    - name: Environment Setup
       run: |
         sudo apt-get purge cmake -y
         sudo apt-get install automake autoconf build-essential intltool libtool libtool-bin make nasm patch tar yasm zlib1g-dev ninja-build gzip pax cmake
         sudo pip3 install meson
-        rustup target add aarch64-pc-windows-gnullvm
 
     - name: Setup Toolchain
       run: |
@@ -32,11 +31,6 @@ jobs:
             echo "Toolchain Verification FAILED. Exiting!"
             return -1
         fi
-
-    - name: Setup Cargo-C Toolchain
-      if: steps.windows-cargo-c-toolchain.outputs.cache-hit != 'true'
-      run: |
-        cargo install cargo-c
 
     - name: Build CLI and LibHB
       run: |
