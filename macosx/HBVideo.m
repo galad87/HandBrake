@@ -33,6 +33,7 @@ NSString * const HBVideoChangedNotification = @"HBVideoChangedNotification";
     self = [super init];
     if (self) {
         _encoder = HB_VCODEC_X264;
+        _colorRange = HBVideoColorRangeLimited;
         _avgBitrate = 1000;
         _quality = 18.0;
         _qualityMaxValue = 51.0f;
@@ -165,6 +166,16 @@ NSString * const HBVideoChangedNotification = @"HBVideoChangedNotification";
         [[self.undo prepareWithInvocationTarget:self] setFrameRateMode:_frameRateMode];
     }
     _frameRateMode = frameRateMode;
+    [self postChangedNotification];
+}
+
+- (void)setColorRange:(HBVideoColorRange)colorRange
+{
+    if (colorRange != _colorRange)
+    {
+        [[self.undo prepareWithInvocationTarget:self] setColorRange:_colorRange];
+    }
+    _colorRange = colorRange;
     [self postChangedNotification];
 }
 
@@ -476,6 +487,8 @@ NSString * const HBVideoChangedNotification = @"HBVideoChangedNotification";
         copy->_frameRate = _frameRate;
         copy->_frameRateMode = _frameRateMode;
 
+        copy->_colorRange = _colorRange;
+
         copy->_multiPass = _multiPass;
         copy->_turboMultiPass = _turboMultiPass;
 
@@ -515,6 +528,8 @@ NSString * const HBVideoChangedNotification = @"HBVideoChangedNotification";
     encodeInt(_frameRate);
     encodeInteger(_frameRateMode);
 
+    encodeInteger(_colorRange);
+
     encodeBool(_multiPass);
     encodeBool(_turboMultiPass);
 
@@ -543,6 +558,9 @@ NSString * const HBVideoChangedNotification = @"HBVideoChangedNotification";
 
     decodeInt(_frameRate); if (_frameRate < 0) { goto fail; }
     decodeInteger(_frameRateMode); if (_frameRateMode < HBVideoFrameRateModeVFR_PFR || _frameRateMode > HBVideoFrameRateModeCFR) { goto fail; }
+
+    decodeInteger(_colorRange); if (_colorRange != HBVideoColorRangeAuto && _colorRange != HBVideoColorRangeLimited && _colorRange != HBVideoColorRangeFull) { goto fail; }
+
     decodeBool(_multiPass);
     decodeBool(_turboMultiPass);
 
@@ -701,6 +719,19 @@ fail:
     }
     self.frameRate = intValue;
 
+    if ([preset[@"VideoColorRange"] isEqualToString:@"full"])
+    {
+        self.colorRange = HBVideoColorRangeFull;
+    }
+    else if ([preset[@"VideoColorRange"] isEqualToString:@"limited"])
+    {
+        self.colorRange = HBVideoColorRangeLimited;
+    }
+    else
+    {
+        self.colorRange = HBVideoColorRangeAuto;
+    }
+
     // 2 Pass Encoding.
     self.multiPass = [preset[@"VideoMultiPass"] boolValue];
 
@@ -759,6 +790,18 @@ fail:
         {
             preset[@"VideoFramerateMode"] = @"pfr";
         }
+    }
+
+    switch (self.colorRange) {
+        case HBVideoColorRangeAuto:
+            preset[@"VideoColorRange"] = @"auto";
+            break;
+        case HBVideoColorRangeFull:
+            preset[@"VideoColorRange"] = @"full";
+            break;
+        case HBVideoColorRangeLimited:
+            preset[@"VideoColorRange"] = @"limited";
+            break;
     }
 
     preset[@"VideoMultiPass"] = @(self.multiPass);

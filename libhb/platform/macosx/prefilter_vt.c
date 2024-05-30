@@ -24,6 +24,7 @@ struct hb_filter_private_s
         int width;
         int height;
         int rotation;
+        int color_range;
         int pix_fmt;
     } resample;
 
@@ -133,17 +134,19 @@ static void set_properties(hb_filter_private_t *pv, hb_buffer_t *in)
         if (frame->hw_frames_ctx)
         {
             AVHWFramesContext *frames_ctx = (AVHWFramesContext *)frame->hw_frames_ctx->data;
-            pv->input.pix_fmt    = frames_ctx->sw_format;
+            pv->input.pix_fmt = frames_ctx->sw_format;
         }
         else
         {
-            pv->input.pix_fmt    = frame->format;
+            pv->input.pix_fmt = frame->format;
         }
     }
     else
     {
         pv->input.pix_fmt = in->f.fmt;
     }
+
+    pv->input.color_range = in->f.color_range;
 }
 
 static void process_filter(hb_filter_object_t *filter)
@@ -194,6 +197,7 @@ static int update(hb_filter_private_t *pv)
     pv->resample_needed =
         (pv->output.geometry.width  != pv->input.geometry.width  ||
          pv->output.geometry.height != pv->input.geometry.height ||
+         pv->output.color_range != pv->input.color_range ||
          pv->output.pix_fmt   != pv->input.pix_fmt ||
          job->title->rotation != HB_ROTATION_0);
 
@@ -201,6 +205,7 @@ static int update(hb_filter_private_t *pv)
         (pv->resample_needed &&
          (pv->resample.width    != pv->input.geometry.width  ||
           pv->resample.height   != pv->input.geometry.height ||
+          pv->resample.color_range != pv->input.color_range ||
           pv->resample.pix_fmt  != pv->input.pix_fmt ||
           pv->resample.rotation != job->title->rotation));
 
@@ -208,7 +213,7 @@ static int update(hb_filter_private_t *pv)
                              pv->list_filter == NULL))
     {
         close_filters(pv);
-        hb_list_t *list_filter  = hb_list_init();
+        hb_list_t *list_filter = hb_list_init();
         hb_filter_init_t init = pv->input;
 
         hb_filter_object_t *filter;
@@ -249,6 +254,7 @@ static int update(hb_filter_private_t *pv)
         // Crop Scale & Format
         if (pv->output.geometry.width  != pv->input.geometry.width  ||
             pv->output.geometry.height != pv->input.geometry.height ||
+            pv->output.color_range     != pv->input.color_range     ||
             pv->output.pix_fmt         != pv->input.pix_fmt)
         {
             filter = hb_filter_init(HB_FILTER_CROP_SCALE_VT);
@@ -269,6 +275,12 @@ static int update(hb_filter_private_t *pv)
             {
                 hb_dict_set_int(filter->settings, "format", pv->output.pix_fmt);
                 hb_log("prefilter_vt: converting video pixel format from %s", av_get_pix_fmt_name(pv->input.pix_fmt));
+            }
+
+            if (pv->output.color_range != pv->input.color_range)
+            {
+                hb_dict_set_int(filter->settings, "color-range", pv->output.color_range);
+                hb_log("prefilter_vt: converting color_range from %s", av_color_range_name(pv->input.color_range));
             }
 
             hb_list_add(list_filter, filter);
@@ -314,7 +326,8 @@ static int update(hb_filter_private_t *pv)
 
         pv->resample.width        = pv->input.geometry.width;
         pv->resample.height       = pv->input.geometry.height;
-        pv->resample.rotation     = pv->output.job->title->rotation;
+        pv->resample.rotation     = pv->input.job->title->rotation;
+        pv->resample.color_range  = pv->input.color_range;
         pv->resample.pix_fmt      = pv->input.pix_fmt;
     }
 

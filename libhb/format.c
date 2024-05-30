@@ -68,9 +68,6 @@ static int format_init(hb_filter_object_t *filter, hb_filter_init_t *init)
         hb_dict_set_int(avsettings, "async_depth", init->job->qsv.async_depth);
         init->pix_fmt = av_get_pix_fmt(format);
 
-        if (init->job->qsv.ctx->out_range != AVCOL_RANGE_UNSPECIFIED)
-            hb_dict_set_string(avsettings, "out_range", (init->job->qsv.ctx->out_range == AVCOL_RANGE_JPEG) ? "full" : "limited");
-
         if (hb_qsv_hw_filters_via_video_memory_are_enabled(init->job))
         {
             int result = hb_qsv_create_ffmpeg_vpp_pool(init, init->geometry.width, init->geometry.height);

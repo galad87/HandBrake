@@ -1623,6 +1623,10 @@ static void sanitize_dynamic_hdr_metadata_passthru(hb_job_t *job)
         hb_add_filter(job, filter, settings);
         free(settings);
     }
+
+    job->color_range = job->passthru_dynamic_hdr_metadata & DOVI &&
+                      (job->dovi.dv_profile == 5 || (job->dovi.dv_profile == 10 && job->dovi.dv_bl_signal_compatibility_id == 0)) ?
+                       job->color_range : AVCOL_RANGE_MPEG;
 #else
     job->passthru_dynamic_hdr_metadata &= ~DOVI;
 #endif
@@ -1725,22 +1729,11 @@ static void do_job(hb_job_t *job)
         init.pix_fmt = job->input_pix_fmt;
         init.hw_pix_fmt = job->hw_pix_fmt;
 
-        init.color_prim = title->color_prim;
-        init.color_transfer = title->color_transfer;
-        init.color_matrix = title->color_matrix;
-        // Dolby Vision profile 5 requires full range
-        // TODO: find a better way to handle this
-        init.color_range = job->passthru_dynamic_hdr_metadata & DOVI &&
-                            (job->dovi.dv_profile == 5 ||
-                             (job->dovi.dv_profile == 10 && job->dovi.dv_bl_signal_compatibility_id == 0)) ?
-                            title->color_range : AVCOL_RANGE_MPEG;
-#if HB_PROJECT_FEATURE_QSV
-        if (hb_qsv_full_path_is_enabled(job))
-        {
-            init.color_range = (job->qsv.ctx->out_range == AVCOL_RANGE_UNSPECIFIED) ? title->color_range : job->qsv.ctx->out_range;
-        }
-#endif
-        init.chroma_location = title->chroma_location;
+        init.color_prim = job->color_prim;
+        init.color_transfer = job->color_transfer;
+        init.color_matrix = job->color_matrix;
+        init.color_range = job->color_range;
+        init.chroma_location = job->chroma_location;
         init.geometry = title->geometry;
         memset(init.crop, 0, sizeof(int[4]));
         init.vrate = job->vrate;

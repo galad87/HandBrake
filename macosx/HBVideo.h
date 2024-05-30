@@ -21,6 +21,12 @@ typedef NS_ENUM(NSUInteger, HBVideoFrameRateMode) {
     HBVideoFrameRateModeCFR,
 };
 
+typedef NS_ENUM(NSInteger, HBVideoColorRange) {
+    HBVideoColorRangeAuto    = -1,
+    HBVideoColorRangeLimited =  1,
+    HBVideoColorRangeFull    =  2
+};
+
 extern NSString * const HBVideoChangedNotification;
 
 /**
@@ -36,6 +42,8 @@ extern NSString * const HBVideoChangedNotification;
 
 @property (nonatomic, readwrite) HBVideoFrameRateMode frameRateMode;
 @property (nonatomic, readwrite) int frameRate;
+
+@property (nonatomic, readwrite) HBVideoColorRange colorRange;
 
 @property (nonatomic, readwrite) BOOL multiPass;
 @property (nonatomic, readwrite) BOOL turboMultiPass;

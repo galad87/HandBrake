@@ -2184,19 +2184,6 @@ static int hb_qsv_parse_options(hb_job_t *job)
                     job->qsv.ctx->memory_type = mode->value;
                 }
             }
-            else if (!strcasecmp(key, "out_range"))
-            {
-                hb_triplet_t* mode = NULL;
-                mode = hb_triplet4key(hb_qsv_out_range_types, hb_value_get_string_xform(value));
-                if (!mode)
-                {
-                    err = HB_QSV_PARAM_BAD_VALUE;
-                }
-                else
-                {
-                    job->qsv.ctx->out_range = mode->value;
-                }
-            }
         }
         hb_dict_free(&options_list);
     }
@@ -4915,7 +4902,6 @@ hb_qsv_context* hb_qsv_context_init()
         return NULL;
     }
     ctx->dx_index = hb_qsv_get_default_adapter_index();
-    ctx->out_range = AVCOL_RANGE_UNSPECIFIED;
     hb_qsv_add_context_usage(ctx, 0);
     return ctx;
 }
