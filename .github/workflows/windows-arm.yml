@@ -14,10 +14,22 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
 
-    - name: Environment Setup
+    - name: Cargo-C Toolchain Cache
+      id: windows-arm-cargo-c-toolchain
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/cargo-capi
+          ~/.cargo/bin/cargo-cbuild
+          ~/.cargo/bin/cargo-cinstall
+        key: windows-arm-cargo-c-toolchain
+
+
+    - name: Setup Environment
       run: |
         sudo apt-get install automake autoconf build-essential libtool libtool-bin make nasm patch tar yasm zlib1g-dev ninja-build gzip pax
         sudo pip3 install meson
+        rustup target add aarch64-pc-windows-msvc
 
     - name: Setup Toolchain
       run: |
@@ -35,6 +47,11 @@ jobs:
             echo "Toolchain Verification FAILED. Exiting!"
             return -1
         fi
+
+    - name: Setup Cargo-C Toolchain
+      if: steps.windows-arm-cargo-c-toolchain.outputs.cache-hit != 'true'
+      run: |
+        cargo install cargo-c
 
     - name: Build CLI and LibHB
       run: |
