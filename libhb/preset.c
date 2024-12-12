@@ -2050,7 +2050,12 @@ int hb_preset_apply_video(const hb_dict_t *preset, hb_dict_t *job_dict)
                     hb_value_xform(hb_dict_get(preset, "VideoTurboMultiPass"),
                                     HB_VALUE_TYPE_BOOL));
     }
-    
+
+    if ((value = hb_dict_get(preset, "VideoPasshtruHDRDynamicMetadata")) != NULL)
+    {
+        hb_dict_set(video_dict, "VideoPasshtruHDRDynamicMetadata", hb_value_dup(value));
+    }
+
     if ((value = hb_dict_get(preset, "VideoHWDecode")) != NULL)
     {
         hb_dict_set(video_dict, "HardwareDecode", hb_value_xform(value, HB_VALUE_TYPE_INT));
