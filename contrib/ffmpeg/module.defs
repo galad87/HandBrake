@@ -196,7 +196,10 @@ FFMPEG.CONFIGURE.extra += \
      --enable-cuda-llvm \
      --enable-cuda \
      --enable-filter=colorspace_cuda \
-     --enable-filter=scale_cuda
+     --enable-filter=scale_cuda \
+     --enable-filter=pad_cuda \
+     --enable-filter=yadif_cuda \
+     --enable-filter=bwdif_cuda
 endif
 
 ifeq (1,$(FEATURE.mf))

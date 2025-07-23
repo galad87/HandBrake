@@ -133,6 +133,12 @@ static int deinterlace_init(hb_filter_object_t * filter,
     {
         hb_dict_set(avsettings, "parity", hb_value_string("bff"));
     }
+
+    if (init->hw_pix_fmt == AV_PIX_FMT_CUDA)
+    {
+        filter_name = is_yadif ? "yadif_cuda" : "bwdif_cuda";
+    }
+
     hb_dict_set(avfilter, filter_name, avsettings);
     pv->avfilters = avfilter;
 

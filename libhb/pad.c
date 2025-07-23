@@ -135,7 +135,15 @@ static int pad_init(hb_filter_object_t * filter, hb_filter_init_t * init)
         hb_dict_set(avsettings, "color", hb_value_string(color));
         free(color);
     }
-    hb_dict_set(avfilter, "pad", avsettings);
+
+    if (init->hw_pix_fmt == AV_PIX_FMT_CUDA)
+    {
+        hb_dict_set(avfilter, "pad_cuda", avsettings);
+    }
+    else
+    {
+        hb_dict_set(avfilter, "pad", avsettings);
+    }
     pv->avfilters = avfilter;
 
     init->geometry.width = width;
