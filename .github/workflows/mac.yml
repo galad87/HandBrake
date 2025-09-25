@@ -37,6 +37,7 @@ jobs:
       run: |
         echo ~/mac-toolchain/bin >> $GITHUB_PATH
         rustup target add x86_64-apple-darwin
+        xcodebuild -downloadComponent MetalToolchain
 
     - name: Setup Toolchain
       if: steps.mac-toolchain.outputs.cache-hit != 'true'
