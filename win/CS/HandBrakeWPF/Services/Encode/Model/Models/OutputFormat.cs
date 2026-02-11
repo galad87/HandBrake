@@ -20,12 +20,16 @@ namespace HandBrakeWPF.Services.Encode.Model.Models
         [ShortName("av_mp4")]
         Mp4 = 0,
 
+        [DisplayName("MOV")]
+        [ShortName("av_mov")]
+        Mov = 3,
+
         [DisplayName("MKV")]
         [ShortName("av_mkv")]
-        Mkv,
+        Mkv = 1,
 
         [DisplayName("WebM")]
         [ShortName("av_webm")]
-        WebM
+        WebM = 2,
     }
 }
