@@ -58,7 +58,7 @@ struct _GhbApplication
     GtkApplication parent_instance;
     signal_user_data_t *ud;
     GtkBuilder *builder;
-    char *app_dir;
+    char *app_cmd;
     int cancel_encode;
     int when_complete;
     int stderr_src_id;
@@ -673,11 +673,38 @@ video_file_drop_init (signal_user_data_t *ud)
     g_signal_connect(target, "drop", G_CALLBACK(video_file_drop_received), ud);
 }
 
-const char *
+char *
+ghb_application_get_app_path (GhbApplication *self)
+{
+    g_return_val_if_fail(GHB_IS_APPLICATION(self), NULL);
+
+    // The preferred method, only works on Linux and certain other OSes
+    g_autofree char *link = g_file_read_link("/proc/self/exe", NULL);
+    if (link != NULL)
+        return g_steal_pointer(&link);
+
+    // Alternatively, work out the path from the command name, path and cwd
+    g_autofree char *app_cmd = NULL;
+    g_object_get(self, "app-cmd", &app_cmd, NULL);
+
+    if (g_path_is_absolute(app_cmd))
+        return g_steal_pointer(&app_cmd);
+
+    g_autofree char *path_cmd = g_find_program_in_path(app_cmd);
+    if (path_cmd != NULL)
+        return g_steal_pointer(&path_cmd);
+
+    g_autofree char *cwd = g_get_current_dir();
+    return g_canonicalize_filename(app_cmd, cwd);
+}
+
+char *
 ghb_application_get_app_dir (GhbApplication *self)
 {
     g_return_val_if_fail(GHB_IS_APPLICATION(self), NULL);
-    return self->app_dir;
+
+    g_autofree char *app_path = ghb_application_get_app_path(self);
+    return g_path_get_dirname(app_path);
 }
 
 static void
@@ -692,9 +719,10 @@ print_system_information (GhbApplication *self)
     g_printerr("Kernel: %s %s (%s)\n", host_info->sysname,
                host_info->release, host_info->machine);
 #endif
+    g_autofree char *install_dir = ghb_application_get_app_dir(self);
     g_autofree char *config_dir = ghb_get_user_config_dir(NULL);
     g_printerr("CPU: %s x %d\n", hb_get_cpu_name(), hb_get_cpu_count());
-    g_printerr("Install Dir: %s\n", ghb_application_get_app_dir(self));
+    g_printerr("Install Dir: %s\n", install_dir);
     g_printerr("Config Dir:  %s\n", config_dir);
     g_printerr("_______________________________\n\n");
 }
@@ -914,9 +942,9 @@ ghb_application_init (GhbApplication *self)
 }
 
 GhbApplication *
-ghb_application_new (const char *app_dir)
+ghb_application_new (const char *app_cmd)
 {
-    return g_object_new(GHB_TYPE_APPLICATION, "app-dir", app_dir, NULL);
+    return g_object_new(GHB_TYPE_APPLICATION, "app-cmd", app_cmd, NULL);
 }
 
 static void
@@ -1013,7 +1041,7 @@ ghb_application_shutdown (GApplication *app)
 
 enum {
   PROP_0,
-  PROP_APP_DIR,
+  PROP_APP_CMD,
   N_PROPS
 };
 
@@ -1025,8 +1053,8 @@ ghb_application_get_property (GObject *object, guint prop_id,
 
     switch (prop_id)
     {
-        case PROP_APP_DIR:
-            g_value_set_string(value, self->app_dir);
+        case PROP_APP_CMD:
+            g_value_set_string(value, self->app_cmd);
             break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -1041,8 +1069,8 @@ ghb_application_set_property (GObject *object, guint prop_id,
 
     switch (prop_id)
     {
-        case PROP_APP_DIR:
-            self->app_dir = g_value_dup_string(value);
+        case PROP_APP_CMD:
+            self->app_cmd = g_value_dup_string(value);
             break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -1064,11 +1092,12 @@ ghb_application_class_init (GhbApplicationClass *klass)
     object_class->get_property = ghb_application_get_property;
     object_class->set_property = ghb_application_set_property;
 
-    g_autoptr(GParamSpec) prop = g_param_spec_string("app-dir", "", "", "ghb",
+    g_autoptr(GParamSpec) prop = g_param_spec_string("app-cmd", "App Command",
+            "The full command-line name of the application", "ghb",
             G_PARAM_READABLE | G_PARAM_WRITABLE |
             G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
-    g_object_class_install_property (object_class, PROP_APP_DIR, prop);
+    g_object_class_install_property (object_class, PROP_APP_CMD, prop);
 }
 
 /**
